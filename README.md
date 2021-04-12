@@ -21,5 +21,14 @@ then just run `docker-compose up -d` in order to start the Icinga stack from the
 Icinga Web is provided on { localhost:<port> } **8080** and you can access the Icinga 2 API on port **5665**.
 The default user of Icinga Web is `icingaadmin` with password `icinga`.
 
+
+### CLOUD-INIT YAML for autodeployment
+#### includes:
+
+* letsencrypt certificate deployment (be sure to register to ACME with the mail defined in the yml!)
+* beware of rate limits when deploy https://letsencrypt.org/docs/rate-limits/
+* nginx hardened (ocsp stapling, tls1.3, chacha20 ciphers, ..) reverse proxy for web exposing
+* all docker ports are bound to localhost:<port> and are not forwared to the clear net
+
 ---
 ##### fork from https://github.com/lippserd/docker-compose-icinga by Eric Lippmann | @lippserd 
