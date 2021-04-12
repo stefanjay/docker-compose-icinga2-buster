@@ -1,0 +1,211 @@
+#cloud-config
+manage_resolv_conf: true
+resolv_conf:
+  nameservers: ['1.0.0.1', '1.1.1.1']
+
+timezone: "Europe/Berlin"
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+
+apt:
+  sources:
+    docker.list:
+      source: deb https://download.docker.com/linux/debian $RELEASE stable
+      keyid: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+    nginx.list:
+      source: deb https://nginx.org/packages/mainline/debian $RELEASE nginx
+      keyid: 573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62
+
+package_update: true
+packages:
+  - docker-ce
+  - docker-ce-cli
+  - docker-compose
+  - nginx
+  - lsof
+  - htop
+  - iotop
+  - iftop
+  - fail2ban
+  - nmap
+  - whois
+  - bash-completion
+  - net-tools
+  - iptables
+  - netfilter-persistent
+  - pwgen
+  - letsencrypt
+  - certbot
+  - ripgrep
+  - git
+  - vim
+
+write_files:
+  - path: /etc/iptables.rules-save
+    permissions: '0644'
+    owner: 'root:root'
+    content: |
+      *filter
+      :INPUT DROP [0:0]
+      :FORWARD DROP [0:0]
+      :OUTPUT ACCEPT [0:0]
+      -A INPUT -i lo -j ACCEPT
+      -A INPUT -i eth1 -j ACCEPT
+      -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 1337 -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+      -I INPUT -p all -s 10.0.0.0/24 -j ACCEPT
+      COMMIT
+
+  - path: /root/.bashrc
+    permissions: '0600'
+    owner: "root:root"
+    content: |
+      alias ll='ls -lah'
+      alias tailf='tail -f'
+
+  - path: /etc/ssh/sshd_config
+    permissions: '0600'
+    owner: "root:root"
+    content: |
+        Port 1337
+        KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256
+        HostKeyAlgorithms ssh-ed25519
+        Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com
+        MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com
+        PermitRootLogin yes
+        MaxAuthTries 3
+        MaxSessions 2
+        PubkeyAuthentication yes
+        AuthorizedKeysFile      .ssh/authorized_keys .ssh/authorized_keys2
+        IgnoreRhosts yes
+        PasswordAuthentication no
+        PermitEmptyPasswords no
+        ChallengeResponseAuthentication no
+        UsePAM yes
+        X11Forwarding no
+        PrintMotd no
+        ClientAliveInterval 30
+        UseDNS yes
+        AcceptEnv LANG LC_*
+        Subsystem       sftp    /usr/lib/openssh/sftp-server
+
+  - path: /etc/nginx/conf.d/icinga.conf
+    permissions: '0644'
+    owner: "root:root"
+    content: |
+        server {
+          listen		80;
+          server_name	mon.host.com;
+
+          access_log	/var/log/nginx/mon.host.com_80_access.log;
+          error_log	/var/log/nginx/mon.host.com_80_error.log warn;
+
+          return		301 https://$host$request_uri;
+        }
+
+        server {
+          listen		443 ssl;
+          server_name	mon.host.com;
+
+          access_log	/var/log/nginx/mon.host.com_access.log;
+          error_log 	/var/log/nginx/mon.host.com_error.log warn;
+
+          ssl_certificate		  /etc/letsencrypt/live/mon.host.com/fullchain.pem;
+          ssl_certificate_key	/etc/letsencrypt/live/mon.host.com/privkey.pem;
+
+          ssl_dhparam		    /etc/letsencrypt/archive/mon.host.com/dhparam.pem;
+          ssl_ecdh_curve		secp384r1;
+          ssl_session_timeout	5m;
+          ssl_session_cache	  shared:SSL:5m;
+          ssl_protocols		TLSv1.2 TLSv1.3;
+          ssl_ciphers		  TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES256-GCM-SHA384;
+          ssl_prefer_server_ciphers	on;
+          ssl_stapling		    on;
+          ssl_stapling_verify	on;
+          ssl_trusted_certificate	/etc/letsencrypt/archive/mon.host.com/isrg-root-ocsp-x1.pem;
+
+          add_header		Strict-Transport-Security "max-age=63072000; includeSubdomains; preload" always;
+          add_header		Expect-CT "enforce, max-age=604800, report-uri=\"https\:\/\/mon\.host\.com\/report\"";
+          add_header		Referrer-Policy "strict-origin" always;
+
+          add_header		X-Frame-Options SAMEORIGIN;
+          add_header		X-Content-Type-Options "nosniff" always;
+          add_header		X-XSS-Protection "1; mode=block" always;
+          add_header		X-Robots-Tag none;
+          add_header		X-Download-Options noopen;
+          add_header		X-Permitted-Cross-Domain-Policies none;
+
+          resolver		  1.0.0.1 1.1.1.1 valid=300s;
+          resolver_timeout	3s;
+
+          client_max_body_size 512M;
+          fastcgi_buffers 64 4K;
+          fastcgi_hide_header X-Powered-By;
+
+          location / {
+              allow 5.179.250.87;
+              deny all;
+            proxy_pass http://127.0.0.1:8080;
+            proxy_set_header X-Forwarded-For      $proxy_add_x_forwarded_for;
+          }
+        }
+
+  - path: /etc/nginx/nginx.conf
+    permissions: '0644'
+    owner: "root:root"
+    content: |
+        user  nginx;
+        worker_processes  2;
+
+        error_log  /var/log/nginx/error.log warn;
+        pid        /var/run/nginx.pid;
+
+        events {
+          worker_connections  1024;
+        }
+
+        http {
+          server_tokens off;
+          include       /etc/nginx/mime.types;
+          default_type  application/octet-stream;
+
+          log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                            '$status $body_bytes_sent "$http_referer" '
+                            '"$http_user_agent" "$http_x_forwarded_for"';
+
+          access_log  /var/log/nginx/access.log  main;
+
+          sendfile        on;
+          #tcp_nopush     on;
+          keepalive_timeout  65;
+          #gzip  on;
+          include /etc/nginx/conf.d/*.conf;
+        }
+
+runcmd:
+  - iptables-restore < /etc/iptables.rules-save
+  - netfilter-persistent save
+  - certbot certonly --standalone --rsa-key-size 4096 -d mon.host.com --agree-tos -m stefan@host.com
+  - wget https://letsencrypt.org/certs/isrg-root-ocsp-x1.pem -O /etc/letsencrypt/archive/mon.host.com/isrg-root-ocsp-x1.pem
+  - openssl dhparam -out /etc/letsencrypt/archive/mon.host.com/dhparam.pem -5 2048
+  - cp /etc/failt2ban/jail.conf /etc/failt2ban/jail.local
+  - systemctl restart fail2ban docker
+  - systemctl enable fail2ban docker nginx
+  - git clone https://github.com/lippserd/docker-compose-icinga.git /root/repos/icinga2 2>&1
+  - sed -i 's/3.7/3.6/g' /root/repos/icinga2/docker-compose.yml
+  - sed -i 's/5665:5665/127.0.0.1:5665:5665/g' /root/repos/icinga2/docker-compose.yml
+  - sed -i 's/8080:8080/127.0.0.1:8080:8080/g' /root/repos/icinga2/docker-compose.yml
+  - docker-compose -f /root/repos/icinga2/docker-compose.yml up -d 2>&1
+  - systemctl restart nginx
+
+
+# power_state:
+#   delay: "now"
+#   mode: reboot
+#   message: inital reboot
+#   condition: True
+
+#! FIXME: enable auto reboot after deployment with check for containers beeing ready, e.g. sleep 1mins?
