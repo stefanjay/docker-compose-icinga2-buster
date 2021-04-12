@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.6'
 
 x-logging:
   &default-logging
@@ -35,7 +35,7 @@ services:
     image: icinga/icinga2
     logging: *default-logging
     ports:
-      - 5665:5665
+      - 127.0.0.1:5665:5665
     volumes:
       - icinga2:/data
 
@@ -113,7 +113,7 @@ services:
     image: icinga/icingaweb2:master
     logging: *default-logging
     ports:
-      - 8080:8080
+      - 127.0.0.1:8080:8080
     # Restart Icinga Web container automatically since we have to wait for the database to be ready.
     # Please note that this needs a more sophisticated solution.
     restart: unless-stopped
