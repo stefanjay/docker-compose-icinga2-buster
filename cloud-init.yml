@@ -191,7 +191,7 @@ runcmd:
   - certbot certonly --standalone --rsa-key-size 4096 -d mon.host.com --agree-tos -m stefan@host.com
   - wget https://letsencrypt.org/certs/isrg-root-ocsp-x1.pem -O /etc/letsencrypt/archive/mon.host.com/isrg-root-ocsp-x1.pem
   - openssl dhparam -out /etc/letsencrypt/archive/mon.host.com/dhparam.pem -5 2048
-  - cp /etc/failt2ban/jail.conf /etc/failt2ban/jail.local
+  - cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
   - systemctl restart fail2ban docker
   - systemctl enable fail2ban docker nginx
   - git clone https://github.com/lippserd/docker-compose-icinga.git /root/repos/icinga2 2>&1
