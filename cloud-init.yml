@@ -197,7 +197,6 @@ runcmd:
   - sed -i 's/8080:8080/127.0.0.1:8080:8080/g' /root/repos/icinga2/docker-compose.yml
   - docker-compose -f /root/repos/icinga2/docker-compose.yml up -d 2>&1
   - systemctl restart nginx
-  - docker update --restart always $(docker ps|awk '{ print $1 }'|tail -n +2)
 
 power_state:
   delay: "+60"
