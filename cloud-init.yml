@@ -196,7 +196,7 @@ runcmd:
   - systemctl restart nginx
 
 power_state:
-  delay: "+60"
+  delay: "+2"
   mode: reboot
   message: inital reboot
   condition: True
