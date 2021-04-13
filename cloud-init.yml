@@ -191,10 +191,7 @@ runcmd:
   - cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
   - systemctl restart fail2ban docker
   - systemctl enable fail2ban docker nginx
-  - git clone https://github.com/lippserd/docker-compose-icinga.git /root/repos/icinga2 2>&1
-  - sed -i 's/3.7/3.6/g' /root/repos/icinga2/docker-compose.yml
-  - sed -i 's/5665:5665/127.0.0.1:5665:5665/g' /root/repos/icinga2/docker-compose.yml
-  - sed -i 's/8080:8080/127.0.0.1:8080:8080/g' /root/repos/icinga2/docker-compose.yml
+  - git clone https://github.com/stefanjay/docker-compose-icinga2-buster.git /root/repos/icinga2 2>&1
   - docker-compose -f /root/repos/icinga2/docker-compose.yml up -d 2>&1
   - systemctl restart nginx
 
