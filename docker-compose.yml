@@ -38,6 +38,7 @@ services:
       - 127.0.0.1:5665:5665
     volumes:
       - icinga2:/data
+    restart: always
 
   icingadb:
     environment:
@@ -55,7 +56,7 @@ services:
     logging: *default-logging
     # Restart Icinga DB container automatically since we have to wait for the database to be ready.
     # Please note that this needs a more sophisticated solution.
-    restart: unless-stopped
+    restart: always
 
   icingadb-mysql:
     command: --default-authentication-plugin=mysql_native_password
@@ -68,10 +69,12 @@ services:
     logging: *default-logging
     volumes:
       - icingadb-mysql:/var/lib/mysql
+    restart: always
 
   icingadb-redis:
     image: redis
     logging: *default-logging
+    restart: always
 
   icingaweb:
     depends_on:
@@ -116,7 +119,7 @@ services:
       - 127.0.0.1:8080:8080
     # Restart Icinga Web container automatically since we have to wait for the database to be ready.
     # Please note that this needs a more sophisticated solution.
-    restart: unless-stopped
+    restart: always
     volumes:
       - icingaweb:/data
 
@@ -131,6 +134,7 @@ services:
     logging: *default-logging
     volumes:
       - icingaweb-mysql:/var/lib/mysql
+    restart: always
 
 volumes:
   icinga2:
