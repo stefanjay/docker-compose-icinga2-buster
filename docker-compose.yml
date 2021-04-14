@@ -27,7 +27,7 @@ services:
       - ./init-icinga2.sh:/config/init-icinga2.sh
 
   icinga2:
-    hostnaem: icinga2
+    hostname: icinga2
     depends_on:
       - icingadb-redis
       - init-icinga2
@@ -42,7 +42,7 @@ services:
     restart: always
 
   icingadb:
-    hostnaem: icingadb
+    hostname: icingadb
     environment:
       ICINGADB_MYSQL_HOST: icingadb-mysql
       ICINGADB_MYSQL_DATABASE: icingadb
@@ -61,7 +61,7 @@ services:
     restart: always
 
   icingadb-mysql:
-    hostnaem: icingadb-mysql
+    hostname: icingadb-mysql
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: 1
@@ -75,13 +75,13 @@ services:
     restart: always
 
   icingadb-redis:
-    hostnaem:
+    hostname:
     image: redis
     logging: *default-logging
     restart: always
 
   icingaweb:
-    hostnaem: icingaweb
+    hostname: icingaweb
     depends_on:
       - icingaweb-mysql
     environment:
@@ -123,13 +123,12 @@ services:
     ports:
       - 127.0.0.1:8080:8080
     # Restart Icinga Web container automatically since we have to wait for the database to be ready.
-    # Please note that this needs a more sophisticated solution.
     restart: always
     volumes:
       - icingaweb:/data
 
   icingaweb-mysql:
-    hostnaem: icingaweb-mysql
+    hostname: icingaweb-mysql
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: 1
