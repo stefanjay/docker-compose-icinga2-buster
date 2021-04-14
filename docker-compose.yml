@@ -75,7 +75,7 @@ services:
     restart: always
 
   icingadb-redis:
-    hostname:
+    hostname: icingadb-redis
     image: redis
     logging: *default-logging
     restart: always
