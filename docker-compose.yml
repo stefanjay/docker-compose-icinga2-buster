@@ -27,6 +27,7 @@ services:
       - ./init-icinga2.sh:/config/init-icinga2.sh
 
   icinga2:
+    hostname: icinga2
     depends_on:
       - icingadb-redis
       - init-icinga2
@@ -35,12 +36,13 @@ services:
     image: icinga/icinga2
     logging: *default-logging
     ports:
-      - 127.0.0.1:5665:5665
+      - 5665:5665
     volumes:
       - icinga2:/data
     restart: always
 
   icingadb:
+    hostname: icingadb
     environment:
       ICINGADB_MYSQL_HOST: icingadb-mysql
       ICINGADB_MYSQL_DATABASE: icingadb
@@ -59,6 +61,7 @@ services:
     restart: always
 
   icingadb-mysql:
+    hostname: icingadb-mysql
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: 1
@@ -72,11 +75,13 @@ services:
     restart: always
 
   icingadb-redis:
+    hostname:
     image: redis
     logging: *default-logging
     restart: always
 
   icingaweb:
+    hostname: icingaweb
     depends_on:
       - icingaweb-mysql
     environment:
@@ -124,6 +129,7 @@ services:
       - icingaweb:/data
 
   icingaweb-mysql:
+    hostname: icingaweb-mysql
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: 1
